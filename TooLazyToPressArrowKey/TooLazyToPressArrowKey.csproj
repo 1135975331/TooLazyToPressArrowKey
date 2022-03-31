@@ -44,11 +44,23 @@
         <Reference Include="System.Xaml">
             <RequiredTargetFramework>4.0</RequiredTargetFramework>
         </Reference>
+        <Reference Include="ToastNotifications, Version=2.5.1.0, Culture=neutral, PublicKeyToken=e89d9d7314a7c797">
+          <HintPath>..\packages\ToastNotifications.2.5.1\lib\net40\ToastNotifications.dll</HintPath>
+          <Private>True</Private>
+        </Reference>
+        <Reference Include="ToastNotifications.Messages, Version=2.5.1.0, Culture=neutral, PublicKeyToken=e89d9d7314a7c797">
+          <HintPath>..\packages\ToastNotifications.Messages.2.5.1\lib\net40\ToastNotifications.Messages.dll</HintPath>
+          <Private>True</Private>
+        </Reference>
         <Reference Include="WindowsBase" />
         <Reference Include="PresentationCore" />
         <Reference Include="PresentationFramework" />
         <Reference Include="WindowsInput, Version=1.0.6.0, Culture=neutral, PublicKeyToken=de2685b4776e9c2e">
           <HintPath>..\packages\InputSimulatorPlus.1.0.7\lib\net20\WindowsInput.dll</HintPath>
+          <Private>True</Private>
+        </Reference>
+        <Reference Include="WpfScreenHelper, Version=2.0.0.0, Culture=neutral, PublicKeyToken=null">
+          <HintPath>..\packages\WpfScreenHelper.2.0.0\lib\net40\WpfScreenHelper.dll</HintPath>
           <Private>True</Private>
         </Reference>
     </ItemGroup>
@@ -57,8 +69,12 @@
             <Generator>MSBuild:Compile</Generator>
             <SubType>Designer</SubType>
         </ApplicationDefinition>
+        <Compile Include="PressingKeys.cs" />
+        <Compile Include="PressingKeysField.cs" />
         <Compile Include="PublicEnums.cs" />
         <Compile Include="Util\FloorRoundCeil.cs" />
+        <Compile Include="Util\GenerateArrayAndList.cs" />
+        <Compile Include="Util\VkCodeTable.cs" />
         <Compile Include="WinAPI.cs" />
         <Page Include="MainWindow.xaml">
             <Generator>MSBuild:Compile</Generator>

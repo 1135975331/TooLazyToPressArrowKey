@@ -8,16 +8,10 @@
         Title="MainWindow" Height="600" Width="800">
     <Grid>
         <TextBox x:Name="DebuggingLogTextBox" HorizontalAlignment="Left" Height="157" Margin="395,400,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="337" FontSize="8" Text="DebuggingLog:&#xD;&#xA;"/>
-        <Slider x:Name="AngleSensitivitySlider" HorizontalAlignment="Left" Margin="475,38,0,0" VerticalAlignment="Top" Width="250" Minimum="10" Maximum="90" Value="35" LargeChange="5" SmallChange="1" TickPlacement="BottomRight" TickFrequency="2"/>
-        <Slider x:Name="SensitivitySlider" HorizontalAlignment="Left" Margin="475,103,0,0" VerticalAlignment="Top" Width="250" Minimum="1" Value="10" Maximum="20" LargeChange="5" SmallChange="1" TickPlacement="BottomRight"/>
-        <Label x:Name="AngleSensitivityLabel" Content="Angle" HorizontalAlignment="Left" HorizontalContentAlignment="Right" Margin="377,33,0,0" VerticalAlignment="Top" Height="30" Width="87"/>
-        <Label x:Name="SensitivityLabel" Content="Sensitivity" HorizontalAlignment="Left" HorizontalContentAlignment="Right" Margin="377,96,0,0" VerticalAlignment="Top" Height="30" Width="87"/>
-        <CheckBox x:Name="DebugIsActivated" Content="IsActivated" HorizontalAlignment="Left" Margin="395,379,0,0" VerticalAlignment="Top" IsEnabled="False"/>
-        <Button x:Name="ActivateButton" Content="Activate" HorizontalAlignment="Left" Margin="91,183,0,0" VerticalAlignment="Top" Width="120" Height="40" Click="ActivateButton_Click"/>
-        <Button x:Name="DeactivateButton" Content="Deactivate" HorizontalAlignment="Left" Margin="91,238,0,0" VerticalAlignment="Top" Width="120" Height="40" Click="DeactivateButton_Click"/>
-        <Label x:Name="AngleSensitivityValueLabel" Content="AngleSensitivity: 30" HorizontalAlignment="Left" Margin="553,56,0,0" VerticalAlignment="Top" FontSize="10" Height="27" Width="135"/>
-        <Label x:Name="SensitivityValueLabel" Content="Sensitivity: 10" HorizontalAlignment="Left" Margin="553,121,0,0" VerticalAlignment="Top" FontSize="10" Height="27" Width="135"/>
-        <CheckBox x:Name="FreezeCursorCheckbox" Content="Freeze Cursor" HorizontalAlignment="Left" Margin="395,183,0,0" VerticalAlignment="Top" IsEnabled="False"/>
-
+        <CheckBox x:Name="DebugIsEnabled" Content="IsEnabled" HorizontalAlignment="Left" Margin="395,380,0,0" VerticalAlignment="Top" IsEnabled="True"/>
+        <CheckBox x:Name="IsDebuggingEnabled" Content="IsDebuggingEnabled" HorizontalAlignment="Left" Margin="495,380,0,0" VerticalAlignment="Top" IsEnabled="True" IsChecked="False"/>
+        <Button x:Name="EnableButton" Content="Enable" HorizontalAlignment="Left" Margin="90,180,0,0" VerticalAlignment="Top" Width="120" Height="40" Click="EnableButton_Click"/>
+        <Button x:Name="DisableButton" Content="Disable" HorizontalAlignment="Left" Margin="90,240,0,0" VerticalAlignment="Top" Width="120" Height="40" Click="DisableButton_Click"/>
+        <!-- <Button x:Name="FixButton" Content="Fix" HorizontalAlignment="Left" Margin="91,503,0,0" VerticalAlignment="Top" Width="120" Height="40" Click="FixButton_Click"/> -->
     </Grid>
 </Window>

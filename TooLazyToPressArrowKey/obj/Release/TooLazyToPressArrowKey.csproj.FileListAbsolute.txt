@@ -19,3 +19,7 @@ D:\Developing\C#Projects\TooLazyToPressArrowKey\TooLazyToPressArrowKey\obj\Relea
 D:\Developing\C#Projects\TooLazyToPressArrowKey\TooLazyToPressArrowKey\obj\Release\TooLazyToPressArrowKey.csproj.CopyComplete
 D:\Developing\C#Projects\TooLazyToPressArrowKey\TooLazyToPressArrowKey\obj\Release\TooLazyToPressArrowKey.exe
 D:\Developing\C#Projects\TooLazyToPressArrowKey\TooLazyToPressArrowKey\obj\Release\TooLazyToPressArrowKey.pdb
+D:\Developing\C#Projects\TooLazyToPressArrowKey\TooLazyToPressArrowKey\bin\Release\ToastNotifications.dll
+D:\Developing\C#Projects\TooLazyToPressArrowKey\TooLazyToPressArrowKey\bin\Release\ToastNotifications.Messages.dll
+D:\Developing\C#Projects\TooLazyToPressArrowKey\TooLazyToPressArrowKey\obj\Release\App.baml
+D:\Developing\C#Projects\TooLazyToPressArrowKey\TooLazyToPressArrowKey\bin\Release\WpfScreenHelper.dll

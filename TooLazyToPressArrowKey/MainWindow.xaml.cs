@@ -7,11 +7,19 @@ using System.Windows.Input;
 using System.Windows.Forms;
 using System.Windows.Threading;
 using Extensions;
+using ToastNotifications;
+using ToastNotifications.Lifetime;
+using ToastNotifications.Lifetime.Clear;
+using ToastNotifications.Messages;
+using ToastNotifications.Position;
 using TooLazyToPressArrowKey;
 using WindowsInput;
 using WindowsInput.Native;
-using Point = System.Drawing.Point;
+using static Extensions.VkCodeTable;
+using static TooLazyToPressArrowKey.PressingKeys;
+using Application = System.Windows.Application;
 using Timer = System.Timers.Timer;
+
 
 namespace Touchpad2ArrowKey
 {
@@ -21,46 +29,59 @@ namespace Touchpad2ArrowKey
 	public partial class MainWindow
 	{
 		private bool firstActivateAfterExecution;
-		private bool isActivated;
+		private bool isEnabled;
 		
 		private int threadSleepTime;
-
-		private bool isDebugging;
+		
+		private bool pressedMoreThan2KeysFlag;
 		
 		private readonly InputSimulator inputSim;
 		private Thread t2AThread;
 		
-		private Timer activationTimer;
+		private readonly Timer timerToEnable;
 
-		private readonly int[] vkCodeULDR;                    //방향키의 vkCode
-		private int[] mainTypingVkCodeULDR;   //방향키 역할을 할 메인키
+		private readonly int[] vkCodeULDR;    //방향키의 vkCode
+		private readonly int[] altVkCodeULDR; //방향키 역할을 할 메인키
+		private readonly int[] keysNotToDisable;  //활성화 상태에서 방향키 이외에 
+
+		private int lastKey;  //특정 키가 계속 눌리는 것을 막기 위한 변수
+
+		private Notifier notifier;  //윈도우 알림창
 		
 		public MainWindow()
 		{
 			firstActivateAfterExecution = false;
-			isActivated = false;
-
-			isDebugging = true;  // todo 디버깅 여부 체크박스 만들기
+			isEnabled = false;
+			
+			pressedMoreThan2KeysFlag = false;
 
 			inputSim = new InputSimulator();
 
-			activationTimer = new Timer {
+			timerToEnable = new Timer {
 				AutoReset = false, Interval = 750
 			};
 
-			vkCodeULDR = new[] {38, 37, 40, 39};  //각각 방향키 상, 좌, 하, 우의 vkCode
-			mainTypingVkCodeULDR = new[] {73, 74, 75, 76};  //각각 i, j, k, l의 vkCode  각각 Up, Left, Down. Right키의 역할을 한다.
+			vkCodeULDR = new[] {UP_ARROW, LEFT_ARROW, DOWN_ARROW, RIGHT_ARROW};
+			altVkCodeULDR = new[] {I, J, K, L};  //각각 Up, Left, Down. Right키의 역할을 한다.
+			keysNotToDisable = new[] { L_CTRL, L_SHIFT, L_ALT, R_CTRL, R_SHIFT, R_ALT, SPACE, BACKSPACE, ENTER };  //활성화 이후에도 입력을 허용할 키
+			
+			InitializePressedKeysArray();
+
+			notifier = NotifierInit();
 			
 
 			InitializeComponent();
 			
-			DebugIsActivated.IsChecked = isActivated;
-			DeactivateButton.IsEnabled = false;
+			DebugIsEnabled.IsChecked = isEnabled;
+			DisableButton.IsEnabled = false;
+			
 
-
-
+			Hook.KeyboardHook.KeyDown += SetKeyPressStatus_Down;
 			Hook.KeyboardHook.KeyDown += KeyboardHook_KeyDown;
+			
 			Hook.KeyboardHook.KeyUp += KeyboardHook_KeyUp;
+			Hook.KeyboardHook.KeyUp += SetKeyPressStatus_Up;
+			
 			Hook.KeyboardHook.HookStart();
 		}
 		
@@ -68,73 +89,109 @@ namespace Touchpad2ArrowKey
 			Hook.KeyboardHook.HookEnd();
 		}
 		
-		private bool KeyboardHook_KeyDown(int vkCode) {
-			if(isDebugging)
+		private bool KeyboardHook_KeyDown(int vkCode)
+		{
+			//SetKeyPressStatus_Down(vkCode);
+
+
+
+			if(isEnabled) {
+				MainTypingToArrowKey(vkCode);
+				if(vkCodeULDR.Any(i => i == vkCode) || keysNotToDisable.Any(i => i == vkCode)) return true;
+				
+				if(altVkCodeULDR.All(i => i != vkCode)) {
+					notifier.ClearMessages(new ClearByMessage("These keys are currently disabled."));
+					notifier.ShowInformation("These keys are currently disabled.");
+				}
+				
+				return false;
+			}
+			
+			return true;
+		}
+
+
+		private int maxKeyPressCount = 0;
+		private bool KeyboardHook_KeyUp(int vkCode)
+		{
+			if(IsDebuggingEnabled.IsChecked != null && IsDebuggingEnabled != null && (bool)IsDebuggingEnabled.IsChecked)
 				DebuggingLogTextBox.AppendText($"{vkCode}|");
 			
-			if(vkCode.ToString() == "164") { //vkCode 164 == ALT
-				if(activationTimer.Enabled) {
-					activationTimer.Stop();
 
-					if(isActivated)
-						M2ADeactivate();
-					else
-						M2AActivate();
+			var isNull = PressingKeysArray[L_CTRL] == null || PressingKeysArray[L_SHIFT] == null; 
+			if(!isNull && (bool)PressingKeysArray[L_CTRL] && (bool)PressingKeysArray[L_SHIFT]) {  //CTRL과 SHIFT가 눌린 상태일때
+				maxKeyPressCount = Math.Max(maxKeyPressCount, GetNumberOfPressingKeys());
+				var otherKeyWasPressingFlag = maxKeyPressCount > 2;
+				if(otherKeyWasPressingFlag) {
+					if(vkCode is L_CTRL or L_SHIFT)
+						maxKeyPressCount = 0;
+					
+					return true;
 				}
-				else { activationTimer.Start(); }
-			}
-			else if(isActivated) {
-				MainTypingToArrowKey(vkCode);
-				if(vkCodeULDR.All(i => i != vkCode))
-					return false;
+				
+				/*if(timerToEnable.Enabled) {
+					timerToEnable.Stop();
+
+					if(isEnabled)
+						M2ADisable();
+					else
+						M2AEnable();
+				}
+				else { timerToEnable.Start(); }*/
+				
+				if(isEnabled)
+					M2ADisable();
+				else
+					M2AEnable();
 			}
 			
-			return true;
-		}
-
-		private static bool KeyboardHook_KeyUp(int vkCode) {
+			//SetKeyPressStatus_Up(vkCode);
 			return true;
 		}
 		
 
-		private void ActivateButton_Click(object sender, RoutedEventArgs e)
-			=> M2AActivate();
+		private void EnableButton_Click(object sender, RoutedEventArgs e)
+			=> M2AEnable();
 
-		private void DeactivateButton_Click(object sender, RoutedEventArgs e) 
-			=> M2ADeactivate();
+		private void DisableButton_Click(object sender, RoutedEventArgs e) 
+			=> M2ADisable();
 		
-		private void M2AActivate()
+		private void M2AEnable()
 		{
-			isActivated = true;
-			DebugIsActivated.IsChecked = isActivated;
-			ActivateButton.IsEnabled = false;
-			DeactivateButton.IsEnabled = true;
+			isEnabled = true;
+			DebugIsEnabled.IsChecked = isEnabled;
+			EnableButton.IsEnabled = false;
+			DisableButton.IsEnabled = true;
+			notifier.ClearMessages(new ClearByMessage("Disabled"));
+			notifier.ShowInformation("Enabled");
 
 			if(firstActivateAfterExecution) {
 				firstActivateAfterExecution = false;
-				M2ADeactivate();
-				M2AActivate();
+				M2ADisable();
+				M2AEnable();
 			}
 		}
 		
-		private void M2ADeactivate()
+		private void M2ADisable()
 		{
-			isActivated = false;
-			DebugIsActivated.IsChecked = isActivated;
-			DeactivateButton.IsEnabled = false;
-			ActivateButton.IsEnabled = true;
+			isEnabled = false;
+			DebugIsEnabled.IsChecked = isEnabled;
+			DisableButton.IsEnabled = false;
+			EnableButton.IsEnabled = true;
+			notifier.ClearMessages(new ClearByMessage("Enabled"));
+			notifier.ShowInformation("Disabled");
 		}
 		
 		private void MainTypingToArrowKey(int vkCode)
 		{
 			VirtualKeyCode? arrowKeyToBePressed;
-			if(vkCode == mainTypingVkCodeULDR[(int)VkCodeULDREnum.UP])
+			if(vkCode == altVkCodeULDR[(int)VkCodeULDREnum.UP])
 				arrowKeyToBePressed = VirtualKeyCode.UP;
-			else if(vkCode == mainTypingVkCodeULDR[(int)VkCodeULDREnum.LEFT])
+			else if(vkCode == altVkCodeULDR[(int)VkCodeULDREnum.LEFT])
 				arrowKeyToBePressed = VirtualKeyCode.LEFT;
-			else if(vkCode == mainTypingVkCodeULDR[(int)VkCodeULDREnum.DOWN])
+			else if(vkCode == altVkCodeULDR[(int)VkCodeULDREnum.DOWN])
 				arrowKeyToBePressed = VirtualKeyCode.DOWN;
-			else if(vkCode == mainTypingVkCodeULDR[(int)VkCodeULDREnum.RIGHT])
+			else if(vkCode == altVkCodeULDR[(int)VkCodeULDREnum.RIGHT])
 				arrowKeyToBePressed = VirtualKeyCode.RIGHT;
 			else
 				arrowKeyToBePressed = null;
@@ -142,5 +199,26 @@ namespace Touchpad2ArrowKey
 			if(arrowKeyToBePressed != null)
 				inputSim.Keyboard.KeyPress((VirtualKeyCode)arrowKeyToBePressed);
 		}
+
+		private static Notifier NotifierInit()
+		{
+			return new Notifier(cfg => {
+				cfg.PositionProvider = new PrimaryScreenPositionProvider(
+					corner: Corner.TopRight,
+					offsetX: 10, offsetY: 100);
+
+				cfg.LifetimeSupervisor = new TimeAndCountBasedLifetimeSupervisor(
+					notificationLifetime: TimeSpan.FromSeconds(2),
+					maximumNotificationCount: MaximumNotificationCount.FromCount(3));
+
+				cfg.DisplayOptions.TopMost = true;
+				cfg.DisplayOptions.Width = 250;
+				
+				cfg.Dispatcher = Application.Current.Dispatcher;
+			});
+		}
+
+		private void FixButton_Click(object sender, RoutedEventArgs e) 
+			=> FixPressedKeysStatus();
 	}
 }
